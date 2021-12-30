@@ -136,7 +136,7 @@ const draw = (time = 0) => () => {
 
 // Create image from base logo
 const img = document.createElement('img')
-img.src = 'baseLogo.png'
+img.src = 'BaseLogo.png'
 img.setAttribute('crossOrigin', '')
 
 // When the image loads, draw it to canvas
