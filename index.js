@@ -2,29 +2,26 @@
 const canvas = document.querySelector('canvas')
 const ctx = canvas.getContext('2d')
 
-// Set canvas size
+// Set canvas size to match logo
 canvas.width = 512
 canvas.height = 512
 
 // Config grid
-const gridWidth = 30
-const gridHeight = 30
-const cellWidth = canvas.width / gridWidth
-const cellHeight = canvas.height / gridHeight
+// Using a size that aligns well with base logo
+const cellWidth = 21.33333
+const cellHeight = 21.33333
+const gridWidth = Math.floor(canvas.width / cellWidth)
+const gridHeight = Math.floor(canvas.height / cellHeight)
 
-// Config cell colours
+// Config colours for each cell state
 const cellColours = {
-  0: '#b22222',
-  1: 'white',
-  2: '#d89090'
+  0: '#b22222', // Background
+  1: 'white', // White FG
+  2: '#d89090' // Pinkish FG
 }
 
 // Config anim timing
 const START_DELAY = 5
-
-// Modulo util
-const mod = (a, n) =>
-  ((a % n) + n) % n
 
 // Init grid
 const grid = []
@@ -35,6 +32,7 @@ for (let i = 0; i < gridWidth; i++) {
     grid[i][j] = Math.random() < .5 ? 0 : 1
   }
 }
+
 
 // Util for counting neighbours with given values
 const neighbours = (grid, x, y, f=(v)=>v>0) => {
@@ -70,17 +68,9 @@ const gameOfLife = (grid, x, y, chance=1, doDie=true, doBirth=true) => {
   }
 }
 
-// Define method for saving the frame as a png
-const saveFrame = (frame) => {
-  const img = canvas.toDataURL()
-  const downloadLink = document.createElement('a')
-  downloadLink.download = `frame_${frame}`
-  downloadLink.href = img
-  downloadLink.click()
-}
 
 // Setup draw loop
-const draw = (t = 0) => () => {
+const draw = (time = 0) => () => {
   // Draw grid
   for (let i = 0; i < gridWidth; i++) {
     for (let j = 0; j < gridHeight; j++) {
@@ -90,22 +80,17 @@ const draw = (t = 0) => () => {
     }
   }
 
-  // Effect?
+  // Do effects
+  const t = time % 160
   for (let i = 0; i < gridWidth; i++) {
     for (let j = 0; j < gridHeight; j++) {
-      if (false /*decay*/) {
-        gameOfLife(grid, i, j, 0.1, true, false) 
-        if (grid[i][j] > 0 && Math.random() < .1)
-          grid[i][j] = 0
-      }
-
-      if (t > START_DELAY && t < 20)
+      if (t > START_DELAY && t < 15)
         // Slow GOL
         gameOfLife(grid, i, j, 0.1)
-      if (t > 20 && t < 40)
+      if (t > 15 && t < 60)
         // Faster GOL
         gameOfLife(grid, i, j, 0.3)
-      if (t > 40 && t < 90) {
+      if (t > 60 && t < 90) {
         // Filling GOL
         gameOfLife(grid, i, j, 0.3, true)
         gameOfLife(grid, i, j, 0.7, false)
@@ -113,18 +98,19 @@ const draw = (t = 0) => () => {
       if (t > 90 && t < 110) {
         // Fill w/ white
         if (grid[i][j] != 1) {
-          if (Math.random() < .3)
+          const nc = neighbours(grid, i, j, v => v > 0)
+          if (Math.random() < .05*nc)
             grid[i][j] = 1
         }
       }
-      if (t == 111){
+      if (t == 110){
         // Spawn bg in the center
         grid[Math.floor(gridWidth/2)][Math.floor(gridHeight/2)] = 0
       }
       if (t > 110 && t < 135) {
         // Grow background back
         const nc = neighbours(grid, i, j, v => v == 0)
-        if (Math.random() < .15*nc) {
+        if (Math.random() < .13*nc) {
           grid[i][j] = 0
         }
       }
@@ -137,9 +123,13 @@ const draw = (t = 0) => () => {
     }
   }
 
-  if (t < 145)
-    saveFrame(t)
-  window.setTimeout(draw(t+1), 300)
+  // Save this frame as apng
+  if (time < 145) {
+    //saveFrame(t)
+  }
+
+  // Get next frame
+  window.setTimeout(draw(t+1), 30)
 }
 
 // Create image from base logo
@@ -147,7 +137,8 @@ const img = document.createElement('img')
 img.src = 'baseLogo.png'
 img.setAttribute('crossOrigin', '')
 
-// When the image loads, blit it onto the grid
+// When the image loads, draw it to canvas
+// then blit it to the grid
 img.onload = () => {
   // Draw the image
   ctx.drawImage(img, 0, 0)
@@ -155,6 +146,7 @@ img.onload = () => {
   // Get pixel data
   const pixData = ctx.getImageData(0, 0, canvas.width, canvas.height).data
 
+  // Blit pixel data onto the grid
   for (let i = 0; i < gridWidth; i++) {
     for (let j = 0; j < gridHeight; j++) {
       const cx = Math.floor((i+.5)*cellWidth)
@@ -190,4 +182,18 @@ img.onload = () => {
 
   // Start draw loop
   draw()()
+}
+
+
+// Modulo util
+const mod = (a, n) =>
+  ((a % n) + n) % n
+
+// Define method for saving the frame as a png
+const saveFrame = (frame) => {
+  const img = canvas.toDataURL()
+  const downloadLink = document.createElement('a')
+  downloadLink.download = `frame_${frame}`
+  downloadLink.href = img
+  downloadLink.click()
 }
