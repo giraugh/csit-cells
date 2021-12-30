@@ -20,6 +20,9 @@ const cellColours = {
   2: '#d89090' // Pinkish FG
 }
 
+// Are we downloading frames?
+const downloadFrames = document.location.search == '?dl'
+
 // Config anim timing
 const START_DELAY = 5
 
@@ -32,7 +35,6 @@ for (let i = 0; i < gridWidth; i++) {
     grid[i][j] = Math.random() < .5 ? 0 : 1
   }
 }
-
 
 // Util for counting neighbours with given values
 const neighbours = (grid, x, y, f=(v)=>v>0) => {
@@ -124,12 +126,12 @@ const draw = (time = 0) => () => {
   }
 
   // Save this frame as apng
-  if (time < 145) {
-    //saveFrame(t)
+  if (time < 145 && downloadFrames) {
+    saveFrame(t)
   }
 
   // Get next frame
-  window.setTimeout(draw(t+1), 30)
+  window.setTimeout(draw(t+1), downloadFrames ? 300 : 30)
 }
 
 // Create image from base logo
