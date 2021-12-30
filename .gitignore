@@ -1,3 +1,7 @@
+# Custom
+frames/
+*.gif
+
 # Logs
 logs
 *.log
